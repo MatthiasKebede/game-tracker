@@ -1,3 +1,4 @@
+import type { Entry, Game } from '../api/types'
 import { formatPlaytime, STATUS_LABELS } from './rows'
 import type { LibraryRow, Sort, SortColumn } from './rows'
 
@@ -5,7 +6,12 @@ interface LibraryTableProps {
   rows: LibraryRow[]
   sort: Sort
   onSortChange: (sort: Sort) => void
+  onEditGame: (game: Game) => void
+  onEditEntry: (game: Game, entry: Entry) => void
+  onAddEntry: (game: Game) => void
 }
+
+const actionButton = 'rounded px-1.5 py-0.5 text-sm text-slate-700 underline hover:bg-slate-200 hover:text-slate-900'
 
 const COLUMNS: { column: SortColumn; label: string; numeric?: boolean }[] = [
   { column: 'name', label: 'Name' },
@@ -18,7 +24,7 @@ const COLUMNS: { column: SortColumn; label: string; numeric?: boolean }[] = [
 // Shown in cells that have no value, for example the platform of a game with no entries.
 const EMPTY = <span className="text-slate-400">-</span>
 
-export function LibraryTable({ rows, sort, onSortChange }: LibraryTableProps) {
+export function LibraryTable({ rows, sort, onSortChange, onEditGame, onEditEntry, onAddEntry }: LibraryTableProps) {
   // Clicking the sorted column flips its direction. Clicking another column starts ascending.
   const toggleSort = (column: SortColumn) =>
     onSortChange({
@@ -50,6 +56,9 @@ export function LibraryTable({ rows, sort, onSortChange }: LibraryTableProps) {
                 </th>
               )
             })}
+            <th scope="col" className="px-3 py-2 font-semibold">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -65,6 +74,35 @@ export function LibraryTable({ rows, sort, onSortChange }: LibraryTableProps) {
               <td className="px-3 py-2">{entry ? STATUS_LABELS[entry.status] : EMPTY}</td>
               <td className="px-3 py-2 text-right tabular-nums">{entry ? formatPlaytime(entry.playtimeMinutes) : EMPTY}</td>
               <td className="px-3 py-2 text-right tabular-nums">{game.rating ?? EMPTY}</td>
+              {/* The aria-labels name the game and platform, since every row has the same button text. */}
+              <td className="px-3 py-2 whitespace-nowrap">
+                <button
+                  type="button"
+                  className={actionButton}
+                  aria-label={`Edit game ${game.name}`}
+                  onClick={() => onEditGame(game)}
+                >
+                  Edit game
+                </button>
+                {entry && (
+                  <button
+                    type="button"
+                    className={actionButton}
+                    aria-label={`Edit ${game.name} on ${entry.platformName}`}
+                    onClick={() => onEditEntry(game, entry)}
+                  >
+                    Edit entry
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className={actionButton}
+                  aria-label={`Add ${game.name} to a platform`}
+                  onClick={() => onAddEntry(game)}
+                >
+                  Add platform
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

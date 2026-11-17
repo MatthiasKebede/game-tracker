@@ -29,7 +29,7 @@ A single-user web app for tracking games owned across multiple platforms, with a
 | Migrations | Flyway | Schema changes are versioned SQL files |
 | Build | Maven | |
 | Frontend | React with Vite, TypeScript, Tailwind | Familiar ground, so learning time goes to Java |
-| Tests | JUnit 5 and Spring Boot test support | Focus on import and matching logic |
+| Tests | JUnit 5 and Spring Boot test support; Vitest and React Testing Library | Backend focus on import and matching logic |
 
 Repo layout: a monorepo with `backend/` and `frontend/` folders, a root `docker-compose.yml`, and a root README.
 
@@ -109,7 +109,7 @@ Only PostgreSQL runs in Docker Compose. Spring Boot and the Vite dev server run 
 
 ## API surface
 
-- **Games:** list with filters (platform, status, tag, search text), detail, create, update, delete
+- **Games:** list, detail, create, update, delete. Filtering by platform, status, and search text is done in the browser; server-side filters are deferred until the library is too large for that.
 - **Entries:** add, update, and remove a platform entry for a game
 - **Metadata:** search IGDB by title, apply a result to a game, refresh one game, refresh all
 - **Steam:** trigger an import, list pending candidates, confirm or skip each one, update playtime
@@ -150,3 +150,13 @@ Only PostgreSQL runs in Docker Compose. Spring Boot and the Vite dev server run 
 - `GET /api/games` returns every game with its entries, with no filters or paging. Filters arrive in milestone 3 when the UI needs them.
 - Platforms are read-only through the API. A new platform is added with a migration.
 - Errors are returned as `application/problem+json` (Spring's `ProblemDetail`). Validation errors add an `errors` object mapping field names to messages.
+
+## Milestone 3 notes
+
+- Versions: React 19, Vite 8, TypeScript 7, Tailwind 4, Vitest 5. Linting uses oxlint, which the Vite template now ships in place of ESLint.
+- The library table has one row per entry. A game on two platforms appears twice, and a game with no entries appears once with an empty platform.
+- The page loads everything from `GET /api/games` once, then filters and sorts in the browser. It reloads after every change.
+- Data access is plain `fetch` in `frontend/src/api/client.ts`, with no data-fetching library.
+- In development the Vite dev server proxies `/api` to the backend on port 8080, so the backend has no CORS configuration. A hosted demo (milestone 6) will need either CORS or the frontend served from the same origin.
+- Adding a game with a first platform is two requests. If the second fails, the game is kept and the page shows a notice.
+- Dialogs use the native `<dialog>` element. There is no router, form library, or component library.

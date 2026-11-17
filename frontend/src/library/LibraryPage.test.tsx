@@ -96,6 +96,156 @@ describe('LibraryPage', () => {
     expect(screen.getByRole('columnheader', { name: /Name/ })).not.toHaveAttribute('aria-sort')
   })
 
+  it('adds a game through the dialog and shows it after reloading', async () => {
+    const games = sampleGames()
+    const { calls } = stubFetch([
+      { method: 'GET', path: '/api/games', respond: () => jsonResponse(200, games) },
+      { method: 'GET', path: '/api/platforms', respond: () => jsonResponse(200, PLATFORMS) },
+      {
+        method: 'POST',
+        path: '/api/games',
+        respond: (body) => {
+          const created: Game = { id: 10, coverImageUrl: null, entries: [], ...(body as Omit<Game, 'id' | 'coverImageUrl' | 'entries'>) }
+          games.push(created)
+          return jsonResponse(201, created)
+        },
+      },
+    ])
+    const user = userEvent.setup()
+    render(<LibraryPage />)
+    await screen.findByRole('table')
+
+    await user.click(screen.getByRole('button', { name: 'Add game' }))
+    const dialog = screen.getByRole('dialog', { name: 'Add game' })
+    await user.type(within(dialog).getByLabelText('Name'), 'Outer Wilds')
+    await user.selectOptions(within(dialog).getByLabelText('Rating'), '10')
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByText('Showing 5 of 5 rows')).toBeInTheDocument()
+    expect(bodyRows()).toContain('Outer Wilds | (none) | - | - | 10')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    // One load at the start and one after the save.
+    expect(calls.filter((call) => call.method === 'GET' && call.path === '/api/games')).toHaveLength(2)
+  })
+
+  it('shows a notice when a new game is saved without its platform entry', async () => {
+    const games = sampleGames()
+    stubFetch([
+      { method: 'GET', path: '/api/games', respond: () => jsonResponse(200, games) },
+      { method: 'GET', path: '/api/platforms', respond: () => jsonResponse(200, PLATFORMS) },
+      {
+        method: 'POST',
+        path: '/api/games',
+        respond: () => {
+          const created: Game = { id: 10, name: 'Outer Wilds', series: null, rating: null, coverImageUrl: null, entries: [] }
+          games.push(created)
+          return jsonResponse(201, created)
+        },
+      },
+      { method: 'POST', path: '/api/games/10/entries', respond: () => jsonResponse(404, { detail: 'Platform 1 not found' }) },
+    ])
+    const user = userEvent.setup()
+    render(<LibraryPage />)
+    await screen.findByRole('table')
+
+    await user.click(screen.getByRole('button', { name: 'Add game' }))
+    const dialog = screen.getByRole('dialog', { name: 'Add game' })
+    await user.type(within(dialog).getByLabelText('Name'), 'Outer Wilds')
+    await user.selectOptions(within(dialog).getByLabelText('Platform'), 'Steam')
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      '"Outer Wilds" was added, but its platform entry was not: Platform 1 not found',
+    )
+    expect(await screen.findByText('Showing 5 of 5 rows')).toBeInTheDocument()
+    expect(bodyRows()).toContain('Outer Wilds | (none) | - | - | -')
+
+    await user.click(screen.getByRole('button', { name: 'Dismiss' }))
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('deletes a game only after confirmation', async () => {
+    let games = sampleGames()
+    const { calls } = stubFetch([
+      { method: 'GET', path: '/api/games', respond: () => jsonResponse(200, games) },
+      { method: 'GET', path: '/api/platforms', respond: () => jsonResponse(200, PLATFORMS) },
+      {
+        method: 'DELETE',
+        path: '/api/games/1',
+        respond: () => {
+          games = games.filter((game) => game.id !== 1)
+          return jsonResponse(204)
+        },
+      },
+    ])
+    const user = userEvent.setup()
+    render(<LibraryPage />)
+    await screen.findByRole('table')
+
+    // Celeste has two rows, each with its own "Edit game" button.
+    await user.click(screen.getAllByRole('button', { name: 'Edit game Celeste' })[0])
+    await user.click(within(screen.getByRole('dialog', { name: 'Edit game' })).getByRole('button', { name: 'Delete game' }))
+
+    // Nothing is deleted until the confirmation is accepted.
+    const confirm = screen.getByRole('dialog', { name: 'Delete Celeste?' })
+    expect(calls.some((call) => call.method === 'DELETE')).toBe(false)
+
+    await user.click(within(confirm).getByRole('button', { name: 'Delete game' }))
+
+    expect(await screen.findByText('Showing 2 of 2 rows')).toBeInTheDocument()
+    expect(bodyRows()).toEqual(['Hades | Steam | Playing | 32h 15m | 9', 'Portal | (none) | - | - | -'])
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('cancelling a delete leaves the library alone', async () => {
+    const { calls } = stubLibrary(sampleGames())
+    const user = userEvent.setup()
+    render(<LibraryPage />)
+    await screen.findByRole('table')
+
+    await user.click(screen.getByRole('button', { name: 'Edit game Portal' }))
+    await user.click(screen.getByRole('button', { name: 'Delete game' }))
+    await user.click(within(screen.getByRole('dialog', { name: 'Delete Portal?' })).getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(calls.every((call) => call.method === 'GET')).toBe(true)
+    expect(bodyRows()).toHaveLength(4)
+  })
+
+  it('removes one entry and keeps the game on its other platform', async () => {
+    const games = sampleGames()
+    const switchEntry = games[0].entries[0]
+    stubFetch([
+      { method: 'GET', path: '/api/games', respond: () => jsonResponse(200, games) },
+      { method: 'GET', path: '/api/platforms', respond: () => jsonResponse(200, PLATFORMS) },
+      {
+        method: 'DELETE',
+        path: `/api/entries/${switchEntry.id}`,
+        respond: () => {
+          games[0].entries = games[0].entries.filter((entry) => entry.id !== switchEntry.id)
+          return jsonResponse(204)
+        },
+      },
+    ])
+    const user = userEvent.setup()
+    render(<LibraryPage />)
+    await screen.findByRole('table')
+
+    await user.click(screen.getByRole('button', { name: 'Edit Celeste on Switch' }))
+    await user.click(screen.getByRole('button', { name: 'Remove' }))
+    await user.click(
+      within(screen.getByRole('dialog', { name: 'Remove Celeste from Switch?' })).getByRole('button', { name: 'Remove' }),
+    )
+
+    expect(await screen.findByText('Showing 3 of 3 rows')).toBeInTheDocument()
+    expect(bodyRows()).toEqual([
+      'Celeste | Steam | Not Started | 0m | 8',
+      'Hades | Steam | Playing | 32h 15m | 9',
+      'Portal | (none) | - | - | -',
+    ])
+  })
+
   it('says so when the library is empty', async () => {
     stubLibrary([])
     render(<LibraryPage />)
