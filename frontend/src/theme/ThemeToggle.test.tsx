@@ -28,7 +28,7 @@ describe('ThemeToggle', () => {
     render(<ThemeToggle />)
 
     expect(currentTheme()).toBe('light')
-    expect(screen.getByRole('button', { name: 'Dark mode' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Switch to dark mode' })).toBeInTheDocument()
   })
 
   it('follows the system preference for dark when nothing is saved', () => {
@@ -36,7 +36,7 @@ describe('ThemeToggle', () => {
     render(<ThemeToggle />)
 
     expect(currentTheme()).toBe('dark')
-    expect(screen.getByRole('button', { name: 'Light mode' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Switch to light mode' })).toBeInTheDocument()
     // Following the system is not a choice, so nothing is stored yet.
     expect(localStorage.getItem('theme')).toBeNull()
   })
@@ -62,7 +62,7 @@ describe('ThemeToggle', () => {
     const user = userEvent.setup()
     const { unmount } = render(<ThemeToggle />)
 
-    await user.click(screen.getByRole('button', { name: 'Dark mode' }))
+    await user.click(screen.getByRole('button', { name: 'Switch to dark mode' }))
 
     expect(currentTheme()).toBe('dark')
     expect(localStorage.getItem('theme')).toBe('dark')
@@ -73,7 +73,7 @@ describe('ThemeToggle', () => {
 
     expect(currentTheme()).toBe('dark')
 
-    await user.click(screen.getByRole('button', { name: 'Light mode' }))
+    await user.click(screen.getByRole('button', { name: 'Switch to light mode' }))
 
     expect(currentTheme()).toBe('light')
     expect(localStorage.getItem('theme')).toBe('light')
