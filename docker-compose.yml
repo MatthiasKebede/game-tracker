@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      # Host port 5433 avoids the local Postgres on 5432. Bound to localhost only.
+      - "127.0.0.1:5433:5432"
+    volumes:
+      # Named volume: data survives container removal. "docker compose down -v" deletes it.
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
