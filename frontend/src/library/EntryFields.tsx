@@ -33,7 +33,7 @@ export function EntryFields({ values, errors, onChange }: EntryFieldsProps) {
       </Field>
 
       <fieldset>
-        <legend className="text-sm font-medium text-slate-700">Playtime</legend>
+        <legend className="text-sm font-medium text-fg">Playtime</legend>
         <div className="mt-1 grid grid-cols-2 gap-3">
           <Field label="Hours" error={errors.playtimeMinutes}>
             {(inputProps) => (

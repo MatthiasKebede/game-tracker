@@ -9,6 +9,7 @@ import { LibraryTable } from './LibraryTable'
 import { DEFAULT_SORT, filterRows, NO_FILTERS, seriesOptions, sortRows, toRows } from './rows'
 import type { Filters, Sort } from './rows'
 import { primaryButton } from './styles'
+import { ThemeToggle } from '../theme/ThemeToggle'
 import { useLibrary } from './useLibrary'
 
 // Which dialog is open, if any, and what it is about. Only one can be open at a time.
@@ -43,18 +44,21 @@ export function LibraryPage() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl p-6 text-slate-900">
+    <main className="mx-auto max-w-6xl p-6 text-fg">
       <header className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Game Tracker</h1>
-        {!loading && (
-          <button type="button" className={primaryButton} onClick={() => setDialog({ kind: 'addGame' })}>
-            Add game
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          {!loading && (
+            <button type="button" className={primaryButton} onClick={() => setDialog({ kind: 'addGame' })}>
+              Add game
+            </button>
+          )}
+        </div>
       </header>
 
       {error && (
-        <div role="alert" className="mt-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
+        <div role="alert" className="mt-4 rounded border border-danger-line bg-danger-bg px-3 py-2 text-sm text-danger">
           Could not load the library: {error}{' '}
           <button type="button" className="underline" onClick={() => void reload()}>
             Try again
@@ -63,7 +67,7 @@ export function LibraryPage() {
       )}
 
       {notice && (
-        <div role="alert" className="mt-4 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        <div role="alert" className="mt-4 rounded border border-warn-line bg-warn-bg px-3 py-2 text-sm text-warn">
           {notice}{' '}
           <button type="button" className="underline" onClick={() => setNotice(null)}>
             Dismiss
@@ -72,22 +76,22 @@ export function LibraryPage() {
       )}
 
       {loading ? (
-        <p className="mt-6 text-slate-600">Loading the library...</p>
+        <p className="mt-6 text-muted">Loading the library...</p>
       ) : (
         <>
           <div className="mt-6">
             <FilterBar filters={filters} platforms={platforms} series={series} onChange={setFilters} />
           </div>
 
-          <p className="mt-4 text-sm text-slate-600" aria-live="polite">
+          <p className="mt-4 text-sm text-muted" aria-live="polite">
             Showing {visibleRows.length} of {allRows.length} {allRows.length === 1 ? 'row' : 'rows'}
           </p>
 
           <div className="mt-2">
             {allRows.length === 0 ? (
-              !error && <p className="text-slate-600">The library is empty.</p>
+              !error && <p className="text-muted">The library is empty.</p>
             ) : visibleRows.length === 0 ? (
-              <p className="text-slate-600">No rows match the current filters.</p>
+              <p className="text-muted">No rows match the current filters.</p>
             ) : (
               <LibraryTable
                 rows={visibleRows}

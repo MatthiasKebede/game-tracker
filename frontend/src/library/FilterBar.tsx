@@ -11,9 +11,9 @@ interface FilterBarProps {
   onChange: (filters: Filters) => void
 }
 
-const fieldClass = 'rounded border border-slate-300 bg-white px-2 py-1.5 text-sm'
+const fieldClass = 'rounded border border-line bg-field px-2 py-1.5 text-sm'
 
-const labelClass = 'text-sm font-medium text-slate-700'
+const labelClass = 'text-sm font-medium text-fg'
 
 // The series dropdown needs plain strings as option values. A prefix keeps a
 // series that happens to be called "all" or "none" apart from those two choices.
@@ -56,8 +56,8 @@ function ChipGroup<T extends string | number>({ label, options, selected, onChan
               aria-pressed={pressed}
               className={`rounded-full border px-3 py-1 text-sm ${
                 pressed
-                  ? 'border-slate-800 bg-slate-800 text-white'
-                  : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+                  ? 'border-accent bg-accent text-accent-fg'
+                  : 'border-line bg-panel text-fg hover:bg-hover'
               }`}
               onClick={() => onChange(toggled(selected, option.value))}
             >
@@ -109,7 +109,7 @@ export function FilterBar({ filters, platforms, series, onChange }: FilterBarPro
         {isFiltering(filters) && (
           <button
             type="button"
-            className="rounded px-2 py-1.5 text-sm text-slate-700 underline hover:text-slate-900"
+            className="rounded px-2 py-1.5 text-sm text-fg underline hover:text-accent"
             onClick={() => onChange(NO_FILTERS)}
           >
             Clear filters

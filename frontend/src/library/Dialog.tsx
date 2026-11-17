@@ -31,7 +31,7 @@ export function Dialog({ title, onClose, children }: DialogProps) {
       // Fires when the browser closes the dialog, for example on Escape.
       onClose={onClose}
       // m-auto restores the centering that Tailwind's CSS reset removes.
-      className="m-auto w-full max-w-md rounded-lg p-0 text-slate-900 shadow-xl backdrop:bg-slate-900/50"
+      className="m-auto w-full max-w-md rounded-lg border border-line bg-panel p-0 text-fg shadow-xl backdrop:bg-black/60"
     >
       <div className="p-5">
         <h2 id={titleId} className="text-lg font-semibold">
@@ -56,12 +56,12 @@ export function Field({ label, error, children }: FieldProps) {
   const errorId = `${id}-error`
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-sm font-medium text-slate-700">
+      <label htmlFor={id} className="text-sm font-medium text-fg">
         {label}
       </label>
       {children({ id, 'aria-invalid': error !== undefined, 'aria-describedby': error ? errorId : undefined })}
       {error && (
-        <p id={errorId} className="text-sm text-red-700">
+        <p id={errorId} className="text-sm text-danger">
           {error}
         </p>
       )}
@@ -75,7 +75,7 @@ export function FormError({ message }: { message: string | null }) {
     return null
   }
   return (
-    <p role="alert" className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
+    <p role="alert" className="rounded border border-danger-line bg-danger-bg px-3 py-2 text-sm text-danger">
       {message}
     </p>
   )

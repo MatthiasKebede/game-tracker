@@ -11,7 +11,7 @@ interface LibraryTableProps {
   onAddEntry: (game: Game) => void
 }
 
-const actionButton = 'rounded px-1.5 py-0.5 text-sm text-slate-700 underline hover:bg-slate-200 hover:text-slate-900'
+const actionButton = 'rounded px-1.5 py-0.5 text-sm text-fg underline hover:bg-hover hover:text-accent'
 
 const COLUMNS: { column: SortColumn; label: string; numeric?: boolean }[] = [
   { column: 'name', label: 'Name' },
@@ -22,7 +22,7 @@ const COLUMNS: { column: SortColumn; label: string; numeric?: boolean }[] = [
 ]
 
 // Shown in cells that have no value, for example the platform of a game with no entries.
-const EMPTY = <span className="text-slate-400">-</span>
+const EMPTY = <span className="text-muted">-</span>
 
 export function LibraryTable({ rows, sort, onSortChange, onEditGame, onEditEntry, onAddEntry }: LibraryTableProps) {
   // Clicking the sorted column flips its direction. Clicking another column starts ascending.
@@ -33,9 +33,9 @@ export function LibraryTable({ rows, sort, onSortChange, onEditGame, onEditEntry
     })
 
   return (
-    <div className="overflow-x-auto rounded border border-slate-200">
+    <div className="overflow-x-auto rounded border border-line bg-panel">
       <table className="w-full border-collapse text-left text-sm">
-        <thead className="bg-slate-100 text-slate-700">
+        <thead className="bg-header text-fg">
           <tr>
             {COLUMNS.map(({ column, label, numeric }) => {
               const sorted = sort.column === column
@@ -49,7 +49,7 @@ export function LibraryTable({ rows, sort, onSortChange, onEditGame, onEditEntry
                 >
                   <button type="button" className="font-semibold hover:underline" onClick={() => toggleSort(column)}>
                     {label}
-                    <span aria-hidden="true" className="ml-1 inline-block w-3 text-slate-500">
+                    <span aria-hidden="true" className="ml-1 inline-block w-3 text-muted">
                       {sorted ? (sort.direction === 'asc' ? '▲' : '▼') : ''}
                     </span>
                   </button>
@@ -63,14 +63,14 @@ export function LibraryTable({ rows, sort, onSortChange, onEditGame, onEditEntry
         </thead>
         <tbody>
           {rows.map(({ key, game, entry }) => (
-            <tr key={key} className="border-t border-slate-200 hover:bg-slate-50">
-              <th scope="row" className="px-3 py-2 font-medium text-slate-900">
+            <tr key={key} className="border-t border-line hover:bg-hover">
+              <th scope="row" className="px-3 py-2 font-medium text-fg">
                 {game.name}
                 {game.series && game.series !== game.name && (
-                  <span className="block text-xs font-normal text-slate-500">{game.series}</span>
+                  <span className="block text-xs font-normal text-muted">{game.series}</span>
                 )}
               </th>
-              <td className="px-3 py-2">{entry ? entry.platformName : <span className="text-slate-400">(none)</span>}</td>
+              <td className="px-3 py-2">{entry ? entry.platformName : <span className="text-muted">(none)</span>}</td>
               <td className="px-3 py-2">{entry ? STATUS_LABELS[entry.status] : EMPTY}</td>
               <td className="px-3 py-2 text-right tabular-nums">{entry ? formatPlaytime(entry.playtimeMinutes) : EMPTY}</td>
               <td className="px-3 py-2 text-right tabular-nums">{game.rating ?? EMPTY}</td>

@@ -55,7 +55,7 @@ export function EntryDialog({ game, entry, platforms, onClose, onSaved, onDelete
   if (!entry && availablePlatforms.length === 0) {
     return (
       <Dialog title={`Add ${game.name} to a platform`} onClose={onClose}>
-        <p className="mt-4 text-sm text-slate-700">{game.name} is already on every platform.</p>
+        <p className="mt-4 text-sm text-fg">{game.name} is already on every platform.</p>
         <div className="mt-4 flex justify-end">
           <button type="button" className={secondaryButton} onClick={onClose}>
             Close

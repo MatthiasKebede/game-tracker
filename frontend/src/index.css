@@ -1,2 +1,84 @@
 /* Tailwind 4 is configured from CSS: this one import brings in the whole framework. */
 @import "tailwindcss";
+
+/*
+ * Theme colors. Components never name a concrete color. They use utilities such
+ * as bg-panel or text-muted, which read the CSS variables below, so switching
+ * theme only means switching the variable values.
+ *
+ * "inline" makes each utility refer to the variable itself (for example
+ * background-color: var(--panel)) so the value can change at runtime.
+ */
+@theme inline {
+  --color-page: var(--page);
+  --color-panel: var(--panel);
+  --color-field: var(--field);
+  --color-header: var(--header);
+  --color-hover: var(--hover);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-line: var(--danger-line);
+  --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-line: var(--warn-line);
+}
+
+/* Light theme (the default). */
+:root {
+  /* Tells the browser which style to use for its own controls and scrollbars. */
+  color-scheme: light;
+
+  --page: #f4f6f9; /* page background */
+  --panel: #ffffff; /* dialogs, buttons, the table */
+  --field: #ffffff; /* text inputs and dropdowns */
+  --header: #e9eef4; /* table header row */
+  --hover: #edf1f6; /* hovered rows and buttons */
+  --line: #cfd7e1; /* borders */
+  --fg: #16202d; /* main text */
+  --muted: #5a6779; /* secondary text */
+  --accent: #1b5fa8; /* primary buttons, selected chips, links on hover */
+  --accent-hover: #164e8b;
+  --accent-fg: #ffffff; /* text on top of the accent color */
+  --danger: #b3261e;
+  --danger-bg: #fdf1f0;
+  --danger-line: #f1aaa5;
+  --warn: #7a4a00;
+  --warn-bg: #fff6e3;
+  --warn-line: #efc36f;
+}
+
+/* Dark theme: dark navy with a light blue accent. Set by data-theme on <html>. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --page: #151c26;
+  --panel: #1c2836;
+  --field: #131a23;
+  --header: #223245;
+  --hover: #26384c;
+  --line: #34475c;
+  --fg: #dbe4ee;
+  --muted: #8fa2b7;
+  --accent: #66c0f4;
+  --accent-hover: #8ad0f8;
+  --accent-fg: #0f1822;
+  --danger: #ff9389;
+  --danger-bg: #3a2026;
+  --danger-line: #7c343c;
+  --warn: #ffd68a;
+  --warn-bg: #3a2f18;
+  --warn-line: #7c6431;
+}
+
+@layer base {
+  body {
+    background-color: var(--page);
+    color: var(--fg);
+  }
+}

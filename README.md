@@ -35,7 +35,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173. The page lists the library one row per game and platform, with search, platform and status filters, sortable columns, and dialogs to add, edit, and delete games and entries.
+Open http://localhost:5173. The page lists the library one row per game and platform, with search, a series filter, platform and status filters that each accept several values, sortable columns, and dialogs to add, edit, and delete games and entries. A button in the top bar switches between a light and a dark theme.
 
 ### How the browser reaches the API
 

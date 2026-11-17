@@ -160,3 +160,5 @@ Only PostgreSQL runs in Docker Compose. Spring Boot and the Vite dev server run 
 - In development the Vite dev server proxies `/api` to the backend on port 8080, so the backend has no CORS configuration. A hosted demo (milestone 6) will need either CORS or the frontend served from the same origin.
 - Adding a game with a first platform is two requests. If the second fails, the game is kept and the page shows a notice.
 - Dialogs use the native `<dialog>` element. There is no router, form library, or component library.
+- Platform and status filters accept several values each ("Steam or Switch"). Different filters combine as "and". There is also a series dropdown built from the series in the library.
+- Light and dark themes are sets of CSS variables in `frontend/src/index.css`, used through Tailwind utilities such as `bg-panel`. The top bar toggle stores the choice in `localStorage`; without a stored choice the page follows the operating system setting.

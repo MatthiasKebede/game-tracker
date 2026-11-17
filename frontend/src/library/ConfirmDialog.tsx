@@ -34,7 +34,7 @@ export function ConfirmDialog({ title, message, confirmLabel, onConfirm, onClose
     <Dialog title={title} onClose={onClose}>
       <div className="mt-4 flex flex-col gap-4">
         <FormError message={error} />
-        <p className="text-sm text-slate-700">{message}</p>
+        <p className="text-sm text-fg">{message}</p>
         <div className="flex justify-end gap-2">
           <button type="button" className={secondaryButton} disabled={working} onClick={onClose}>
             Cancel
