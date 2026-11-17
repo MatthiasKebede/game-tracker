@@ -35,16 +35,17 @@ Repo layout: a monorepo with `backend/` and `frontend/` folders, a root `docker-
 
 ## Data model
 
-- **game**: name, series, personal rating, cover image URL, IGDB ID, Steam app ID, metadata last fetched timestamp
+- **game**: name, series, personal rating (whole number from 1 to 10, optional), cover image URL, IGDB ID, Steam app ID, metadata last fetched timestamp
 - **developer** and **game_developer**: many-to-many, since some games are co-developed
 - **tag** and **game_tag**: genre tags, many-to-many
 - **platform**: seeded list, including "Emulator" as a regular platform
-- **entry**: one row per game per platform, holding ownership, playtime in minutes, backlog status, and playtime source (manual or Steam)
+- **entry**: one row per game per platform, holding playtime in minutes, backlog status, and playtime source (manual or Steam)
 - **import_candidate**: staging rows from a Steam import, with the proposed IGDB match and a review state (pending, confirmed, skipped)
 
 ### Decisions
 
-- **Playtime and ownership are per entry**, so the same game on two platforms is tracked separately.
+- **Playtime is per entry**, so the same game on two platforms is tracked separately.
+- **An entry means the game is owned on that platform.** There is no separate ownership field.
 - **Personal rating is stored once on the game** and displayed on every entry. Editing it from any entry changes it everywhere, with no copies to keep in step.
 - **Backlog status is per entry.**
 
@@ -141,3 +142,11 @@ Only PostgreSQL runs in Docker Compose. Spring Boot and the Vite dev server run 
 - PostgreSQL 17, in both `docker-compose.yml` and the Testcontainers test configuration
 - Spring's Docker Compose support is in use: running the app from `backend/` starts the container and configures the datasource
 - Tests run against a throwaway Postgres container through Testcontainers
+
+## Milestone 2 notes
+
+- The `V2` migration creates only `game` and `entry`. The developer and tag tables come with milestone 4, and `import_candidate` with milestone 5, once the real data shapes are known.
+- `game` already has the `cover_image_url`, `igdb_id`, `steam_app_id`, and `metadata_fetched_at` columns. They stay empty until milestones 4 and 5.
+- `GET /api/games` returns every game with its entries, with no filters or paging. Filters arrive in milestone 3 when the UI needs them.
+- Platforms are read-only through the API. A new platform is added with a migration.
+- Errors are returned as `application/problem+json` (Spring's `ProblemDetail`). Validation errors add an `errors` object mapping field names to messages.

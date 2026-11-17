@@ -24,6 +24,34 @@ A single-user web app for tracking games owned across multiple platforms. See [P
    - http://localhost:8080/actuator/health
    - http://localhost:8080/api/status
 
+## API
+
+| Method and path | Purpose |
+|---|---|
+| `GET /api/platforms` | List platforms |
+| `GET /api/games` | List games with their entries |
+| `GET /api/games/{id}` | One game with its entries |
+| `POST /api/games` | Create a game |
+| `PUT /api/games/{id}` | Update a game's name, series, and rating |
+| `DELETE /api/games/{id}` | Delete a game and its entries |
+| `POST /api/games/{gameId}/entries` | Add the game to a platform |
+| `PUT /api/entries/{id}` | Update an entry's status and playtime |
+| `DELETE /api/entries/{id}` | Remove an entry |
+
+Example in PowerShell:
+
+```powershell
+$game = Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/games `
+    -ContentType "application/json" -Body '{"name": "Celeste", "rating": 8}'
+
+Invoke-RestMethod -Method Post -Uri "http://localhost:8080/api/games/$($game.id)/entries" `
+    -ContentType "application/json" -Body '{"platformId": 1, "status": "PLAYING", "playtimeMinutes": 90}'
+
+Invoke-RestMethod http://localhost:8080/api/games
+```
+
+`status` is one of `NOT_STARTED`, `PLAYING`, `FINISHED`, `COMPLETED`, `DROPPED`. Rating is a whole number from 1 to 10, or left out. Errors are returned as `application/problem+json`.
+
 ## Running the tests
 
 ```powershell
