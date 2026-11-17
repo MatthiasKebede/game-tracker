@@ -7,6 +7,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
@@ -15,6 +16,9 @@ import io.github.matthiaskebede.gametracker.status.StatusController.StatusRespon
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
+// Same annotations as the other test classes, so Spring reuses one application
+// context (and one Postgres container) for the whole test run.
+@AutoConfigureMockMvc
 class GameTrackerApplicationTests {
 
 	@Autowired
