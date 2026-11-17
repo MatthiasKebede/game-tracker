@@ -6,6 +6,7 @@ A single-user web app for tracking games owned across multiple platforms. See [P
 
 - JDK 25
 - Docker Desktop (running)
+- Node.js 20.19 or newer (developed on 24) with npm
 
 ## Running the backend
 
@@ -23,6 +24,24 @@ A single-user web app for tracking games owned across multiple platforms. See [P
 
    - http://localhost:8080/actuator/health
    - http://localhost:8080/api/status
+
+## Running the frontend
+
+The frontend is a React app in `frontend/`, built with Vite, TypeScript, and Tailwind. Start the backend first, then in a second terminal:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:5173. The page lists the library one row per game and platform, with search, a series filter, platform and status filters that each accept several values, sortable columns, and dialogs to add, edit, and delete games and entries. A button in the top bar switches between a light and a dark theme.
+
+### How the browser reaches the API
+
+The page is served from port 5173 and the API runs on port 8080. Browsers treat those as different origins and block JavaScript on one from calling the other unless the server opts in with CORS (Cross-Origin Resource Sharing) headers.
+
+This project avoids the problem in development with a proxy instead. `frontend/vite.config.ts` tells the Vite dev server to forward every request under `/api` to `http://localhost:8080`. The browser only ever talks to port 5173, so no CORS configuration is needed in the backend.
 
 ## API
 
@@ -60,6 +79,16 @@ cd backend
 ```
 
 Tests use Testcontainers to start a throwaway Postgres container, so they never touch the development database.
+
+Frontend checks, run from `frontend/`:
+
+```powershell
+npm run lint
+npm run build
+npm test
+```
+
+`npm run build` includes the TypeScript type check. `npm test` runs the Vitest suite, which fakes the API and needs neither the backend nor Docker.
 
 ## Data
 
