@@ -6,7 +6,7 @@ import { EntryDialog } from './EntryDialog'
 import { FilterBar } from './FilterBar'
 import { GameDialog } from './GameDialog'
 import { LibraryTable } from './LibraryTable'
-import { DEFAULT_SORT, filterRows, NO_FILTERS, sortRows, toRows } from './rows'
+import { DEFAULT_SORT, filterRows, NO_FILTERS, seriesOptions, sortRows, toRows } from './rows'
 import type { Filters, Sort } from './rows'
 import { primaryButton } from './styles'
 import { useLibrary } from './useLibrary'
@@ -30,6 +30,7 @@ export function LibraryPage() {
 
   // Filtering and sorting happen here in the browser, on the one list the API returned.
   const allRows = useMemo(() => toRows(games), [games])
+  const series = useMemo(() => seriesOptions(games), [games])
   const visibleRows = useMemo(() => sortRows(filterRows(allRows, filters), sort), [allRows, filters, sort])
 
   const closeDialog = () => setDialog(null)
@@ -75,7 +76,7 @@ export function LibraryPage() {
       ) : (
         <>
           <div className="mt-6">
-            <FilterBar filters={filters} platforms={platforms} onChange={setFilters} />
+            <FilterBar filters={filters} platforms={platforms} series={series} onChange={setFilters} />
           </div>
 
           <p className="mt-4 text-sm text-slate-600" aria-live="polite">

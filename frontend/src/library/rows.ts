@@ -19,13 +19,39 @@ export const STATUS_LABELS: Record<BacklogStatus, string> = {
   DROPPED: 'Dropped',
 }
 
+/** Every series, only games without a series, or one series by name. */
+export type SeriesFilter = 'all' | 'none' | { name: string }
+
+/**
+ * Different filters combine as "and". The values inside platformIds and
+ * statuses combine as "or": [Steam, Switch] matches a row on either one. An
+ * empty list means no restriction.
+ */
 export interface Filters {
   search: string
-  platformId: number | null
-  status: BacklogStatus | null
+  platformIds: number[]
+  statuses: BacklogStatus[]
+  series: SeriesFilter
 }
 
-export const NO_FILTERS: Filters = { search: '', platformId: null, status: null }
+export const NO_FILTERS: Filters = { search: '', platformIds: [], statuses: [], series: 'all' }
+
+export function isFiltering(filters: Filters): boolean {
+  return (
+    filters.search !== '' || filters.platformIds.length > 0 || filters.statuses.length > 0 || filters.series !== 'all'
+  )
+}
+
+/** The distinct series in the library, sorted for the series dropdown. */
+export function seriesOptions(games: Game[]): string[] {
+  const names = new Set<string>()
+  for (const game of games) {
+    if (game.series !== null) {
+      names.add(game.series)
+    }
+  }
+  return [...names].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+}
 
 export type SortColumn = 'name' | 'platform' | 'status' | 'playtime' | 'rating'
 
@@ -54,11 +80,17 @@ export function filterRows(rows: LibraryRow[], filters: Filters): LibraryRow[] {
         return false
       }
     }
-    // A row without an entry has no platform or status, so it cannot match those filters.
-    if (filters.platformId !== null && entry?.platformId !== filters.platformId) {
+    if (filters.series === 'none' && game.series !== null) {
       return false
     }
-    if (filters.status !== null && entry?.status !== filters.status) {
+    if (typeof filters.series === 'object' && game.series !== filters.series.name) {
+      return false
+    }
+    // A row without an entry has no platform or status, so it cannot match those filters.
+    if (filters.platformIds.length > 0 && !(entry && filters.platformIds.includes(entry.platformId))) {
+      return false
+    }
+    if (filters.statuses.length > 0 && !(entry && filters.statuses.includes(entry.status))) {
       return false
     }
     return true

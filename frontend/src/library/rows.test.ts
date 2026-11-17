@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { sampleGames } from '../test/fixtures'
-import { filterRows, formatPlaytime, NO_FILTERS, sortRows, toRows } from './rows'
+import { filterRows, formatPlaytime, isFiltering, NO_FILTERS, seriesOptions, sortRows, toRows } from './rows'
 import type { LibraryRow } from './rows'
 
 // "Celeste/Switch" style labels make expected row orders easy to read.
@@ -40,20 +40,68 @@ describe('filterRows', () => {
   })
 
   it('filters by platform and leaves out games without entries', () => {
-    expect(labels(filterRows(rows, { ...NO_FILTERS, platformId: 1 }))).toEqual(['Celeste/Steam', 'Hades/Steam'])
+    expect(labels(filterRows(rows, { ...NO_FILTERS, platformIds: [1] }))).toEqual(['Celeste/Steam', 'Hades/Steam'])
+  })
+
+  it('matches a row on any of several chosen platforms', () => {
+    // 2 is Xbox, which nothing is on. 3 is Switch.
+    expect(labels(filterRows(rows, { ...NO_FILTERS, platformIds: [2, 3] }))).toEqual(['Celeste/Switch'])
+    expect(labels(filterRows(rows, { ...NO_FILTERS, platformIds: [1, 3] }))).toEqual([
+      'Celeste/Switch',
+      'Celeste/Steam',
+      'Hades/Steam',
+    ])
   })
 
   it('filters by status per entry, not per game', () => {
-    expect(labels(filterRows(rows, { ...NO_FILTERS, status: 'FINISHED' }))).toEqual(['Celeste/Switch'])
+    expect(labels(filterRows(rows, { ...NO_FILTERS, statuses: ['FINISHED'] }))).toEqual(['Celeste/Switch'])
   })
 
-  it('combines filters so a row must match all of them', () => {
-    expect(labels(filterRows(rows, { search: 'e', platformId: 1, status: 'PLAYING' }))).toEqual(['Hades/Steam'])
-    expect(filterRows(rows, { search: 'celeste', platformId: 1, status: 'PLAYING' })).toEqual([])
+  it('matches a row with any of several chosen statuses', () => {
+    expect(labels(filterRows(rows, { ...NO_FILTERS, statuses: ['FINISHED', 'PLAYING'] }))).toEqual([
+      'Celeste/Switch',
+      'Hades/Steam',
+    ])
+  })
+
+  it('filters by one series, or by having no series', () => {
+    expect(labels(filterRows(rows, { ...NO_FILTERS, series: { name: 'Hades' } }))).toEqual(['Hades/Steam'])
+    expect(labels(filterRows(rows, { ...NO_FILTERS, series: { name: 'Portal' } }))).toEqual(['Portal/none'])
+    expect(labels(filterRows(rows, { ...NO_FILTERS, series: 'none' }))).toEqual(['Celeste/Switch', 'Celeste/Steam'])
+  })
+
+  it('combines different filters so a row must match all of them', () => {
+    expect(
+      labels(filterRows(rows, { search: 'e', platformIds: [1, 3], statuses: ['PLAYING', 'FINISHED'], series: 'all' })),
+    ).toEqual(['Celeste/Switch', 'Hades/Steam'])
+    expect(
+      labels(filterRows(rows, { search: 'e', platformIds: [1, 3], statuses: ['PLAYING', 'FINISHED'], series: 'none' })),
+    ).toEqual(['Celeste/Switch'])
+    expect(filterRows(rows, { search: 'celeste', platformIds: [1], statuses: ['PLAYING'], series: 'all' })).toEqual([])
   })
 
   it('still finds a game without entries by search alone', () => {
     expect(labels(filterRows(rows, { ...NO_FILTERS, search: 'portal' }))).toEqual(['Portal/none'])
+  })
+})
+
+describe('seriesOptions', () => {
+  it('lists each series once, sorted without regard to case, leaving out games with none', () => {
+    const games = sampleGames()
+    games.push({ ...games[1], id: 4, name: 'Hades II', entries: [] })
+    games.push({ ...games[1], id: 5, name: 'Half-Life', series: 'half-life', entries: [] })
+
+    expect(seriesOptions(games)).toEqual(['Hades', 'half-life', 'Portal'])
+  })
+})
+
+describe('isFiltering', () => {
+  it('is true as soon as any one filter is set', () => {
+    expect(isFiltering(NO_FILTERS)).toBe(false)
+    expect(isFiltering({ ...NO_FILTERS, search: 'a' })).toBe(true)
+    expect(isFiltering({ ...NO_FILTERS, platformIds: [1] })).toBe(true)
+    expect(isFiltering({ ...NO_FILTERS, statuses: ['DROPPED'] })).toBe(true)
+    expect(isFiltering({ ...NO_FILTERS, series: 'none' })).toBe(true)
   })
 })
 

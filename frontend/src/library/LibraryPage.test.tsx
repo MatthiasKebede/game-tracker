@@ -28,6 +28,11 @@ function bodyRows(): string[] {
   )
 }
 
+// One of the on/off filter buttons, for example chip('Platform', 'Steam').
+function chip(group: string, label: string): HTMLElement {
+  return within(screen.getByRole('group', { name: group })).getByRole('button', { name: label })
+}
+
 describe('LibraryPage', () => {
   it('shows one row per entry, sorted by name, with labels and formatted playtime', async () => {
     stubLibrary(sampleGames())
@@ -50,10 +55,71 @@ describe('LibraryPage', () => {
     render(<LibraryPage />)
     await screen.findByRole('table')
 
-    await user.selectOptions(screen.getByLabelText('Status'), 'Finished')
+    await user.click(chip('Status', 'Finished'))
 
+    expect(chip('Status', 'Finished')).toHaveAttribute('aria-pressed', 'true')
     expect(bodyRows()).toEqual(['Celeste | Switch | Finished | 10h 0m | 8'])
     expect(screen.getByText('Showing 1 of 4 rows')).toBeInTheDocument()
+  })
+
+  it('shows rows on either platform when two platforms are chosen', async () => {
+    const games = sampleGames()
+    games[1].entries[0] = { ...games[1].entries[0], platformId: 2, platformName: 'Xbox' }
+    stubLibrary(games)
+    const user = userEvent.setup()
+    render(<LibraryPage />)
+    await screen.findByRole('table')
+
+    await user.click(chip('Platform', 'Switch'))
+
+    expect(bodyRows()).toEqual(['Celeste | Switch | Finished | 10h 0m | 8'])
+
+    await user.click(chip('Platform', 'Xbox'))
+
+    expect(bodyRows()).toEqual(['Celeste | Switch | Finished | 10h 0m | 8', 'Hades | Xbox | Playing | 32h 15m | 9'])
+
+    // Clicking a chosen chip again takes it back out.
+    await user.click(chip('Platform', 'Switch'))
+
+    expect(chip('Platform', 'Switch')).toHaveAttribute('aria-pressed', 'false')
+    expect(bodyRows()).toEqual(['Hades | Xbox | Playing | 32h 15m | 9'])
+  })
+
+  it('narrows platform chips further with status chips', async () => {
+    stubLibrary(sampleGames())
+    const user = userEvent.setup()
+    render(<LibraryPage />)
+    await screen.findByRole('table')
+
+    await user.click(chip('Platform', 'Steam'))
+    await user.click(chip('Platform', 'Switch'))
+    await user.click(chip('Status', 'Playing'))
+    await user.click(chip('Status', 'Not Started'))
+
+    expect(bodyRows()).toEqual(['Celeste | Steam | Not Started | 0m | 8', 'Hades | Steam | Playing | 32h 15m | 9'])
+  })
+
+  it('filters by series, listing the series found in the library', async () => {
+    stubLibrary(sampleGames())
+    const user = userEvent.setup()
+    render(<LibraryPage />)
+    await screen.findByRole('table')
+    const seriesSelect = screen.getByLabelText('Series')
+
+    expect(within(seriesSelect).getAllByRole('option').map((option) => option.textContent)).toEqual([
+      'All series',
+      'No series',
+      'Hades',
+      'Portal',
+    ])
+
+    await user.selectOptions(seriesSelect, 'Portal')
+
+    expect(bodyRows()).toEqual(['Portal | (none) | - | - | -'])
+
+    await user.selectOptions(seriesSelect, 'No series')
+
+    expect(bodyRows()).toEqual(['Celeste | Steam | Not Started | 0m | 8', 'Celeste | Switch | Finished | 10h 0m | 8'])
   })
 
   it('combines search and platform filters and can clear them', async () => {
@@ -62,7 +128,7 @@ describe('LibraryPage', () => {
     render(<LibraryPage />)
     await screen.findByRole('table')
 
-    await user.selectOptions(screen.getByLabelText('Platform'), 'Steam')
+    await user.click(chip('Platform', 'Steam'))
     await user.type(screen.getByLabelText('Search'), 'had')
 
     expect(bodyRows()).toEqual(['Hades | Steam | Playing | 32h 15m | 9'])
@@ -75,6 +141,8 @@ describe('LibraryPage', () => {
     await user.click(screen.getByRole('button', { name: 'Clear filters' }))
 
     expect(bodyRows()).toHaveLength(4)
+    expect(chip('Platform', 'Steam')).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByLabelText('Search')).toHaveValue('')
   })
 
   it('sorts by a clicked column and reverses on a second click', async () => {
